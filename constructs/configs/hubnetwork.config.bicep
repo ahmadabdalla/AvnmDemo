@@ -1,40 +1,37 @@
 targetScope = 'subscription'
 
-param uniqueName string = 'platform'
+param identifier string
 param hubVnetAddressSpace array = [
   '10.0.0.0/24'
   '10.0.1.0/24'
 ]
-param vmAdminUserName string
-@secure()
-param vmAdminPassword string
 
 // Resource Group
 
-var resourceGroupName = 'rg-${uniqueName}-01'
+var resourceGroupName = 'rg-${identifier}'
 
-module resourceGroup '../../../modules/Microsoft.Resources/resourceGroups/deploy.bicep' = {
+module resourceGroup '../../modules/Microsoft.Resources/resourceGroups/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-rg'
   params: {
     name: resourceGroupName
   }
 }
 
-module nsg_subnet_bastion '../../../modules/Microsoft.Network/networkSecurityGroups/deploy.bicep' = {
+module nsg_subnet_bastion '../../modules/Microsoft.Network/networkSecurityGroups/deploy.bicep' = {
   scope: az.resourceGroup(resourceGroupName)
-  name: '${uniqueString(deployment().name)}-nsg-sn-bastionSubnet'
+  name: '${uniqueString(deployment().name)}-nsg-sn-bastionSubnet-vnet-hub'
   dependsOn: [
     resourceGroup
   ]
   params: {
-    name: 'nsg-sn-bastionSubnet-${uniqueName}-01'
+    name: 'nsg-sn-bastionSubnet-${identifier}-vnet-hub'
     securityRules: [
       {
         name: 'AllowHttpsInBound'
         properties: {
           protocol: 'Tcp'
           sourcePortRange: '*'
-          sourceAddressPrefix: '180.100.100.100'
+          sourceAddressPrefix: '*'
           destinationPortRange: '443'
           destinationAddressPrefix: '*'
           access: 'Allow'
@@ -175,23 +172,23 @@ module nsg_subnet_bastion '../../../modules/Microsoft.Network/networkSecurityGro
   }
 }
 
-module nsg_subnet_default '../../../modules/Microsoft.Network/networkSecurityGroups/deploy.bicep' = {
+module nsg_subnet_default '../../modules/Microsoft.Network/networkSecurityGroups/deploy.bicep' = {
   scope: az.resourceGroup(resourceGroupName)
-  name: '${uniqueString(deployment().name)}-nsg-sn-default'
+  name: '${uniqueString(deployment().name)}-nsg-sn-default-vnet-hub'
   dependsOn: [
     resourceGroup
   ]
   params: {
-    name: 'nsg-sn-default-${uniqueName}-01'
+    name: 'nsg-sn-default-${identifier}-vnet-hub'
   }
 }
 
-module virtualNetwork '../../../modules/Microsoft.Network/virtualNetworks/deploy.bicep' = {
+module virtualNetwork '../../modules/Microsoft.Network/virtualNetworks/deploy.bicep' = {
   scope: az.resourceGroup(resourceGroupName)
-  name: '${uniqueString(deployment().name)}-vnet'
+  name: '${uniqueString(deployment().name)}-vnet-hub'
   params: {
     addressPrefixes: hubVnetAddressSpace
-    name: 'vnet-${uniqueName}-01'
+    name: 'vnet-hub-${identifier}'
     subnets: [
       {
         addressPrefix: hubVnetAddressSpace[0]
@@ -200,18 +197,18 @@ module virtualNetwork '../../../modules/Microsoft.Network/virtualNetworks/deploy
       }
       {
         addressPrefix: hubVnetAddressSpace[1]
-        name: 'sn-default-${uniqueName}-level1-01'
+        name: 'sn-default-${identifier}-vnet-hub'
         networkSecurityGroupId: nsg_subnet_default.outputs.resourceId
       }
     ]
   }
 }
 
-module publicIpBastion '../../../modules/Microsoft.Network/publicIPAddresses/deploy.bicep' = {
+module publicIpBastion '../../modules/Microsoft.Network/publicIPAddresses/deploy.bicep' = {
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-bst-pip'
   params: {
-    name: 'pip-bst-${uniqueName}-01'
+    name: 'pip-bst-vnet-hub-${identifier}'
     skuName: 'Standard'
     publicIPAllocationMethod: 'Static'
   }
@@ -220,50 +217,14 @@ module publicIpBastion '../../../modules/Microsoft.Network/publicIPAddresses/dep
   ]
 }
 
-module azureBastion '../../../modules/Microsoft.Network/bastionHosts/deploy.bicep' = {
+module azureBastion '../../modules/Microsoft.Network/bastionHosts/deploy.bicep' = {
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-bst'
   params: {
-    name: 'bst-${uniqueName}-01'
+    name: 'bst-vnet-hub-${identifier}'
     vNetId: virtualNetwork.outputs.resourceId
     skuType: 'Basic'
     isCreateDefaultPublicIP: false
     azureBastionSubnetPublicIpId: publicIpBastion.outputs.resourceId
-  }
-}
-
-module virtualMachine '../../../modules/Microsoft.Compute/virtualMachines/deploy.bicep' = {
-  scope: az.resourceGroup(resourceGroupName)
-  name: '${uniqueString(deployment().name)}-vm'
-  params: {
-    name: 'vm-hub'
-    adminUsername: vmAdminUserName
-    adminPassword: vmAdminPassword
-    encryptionAtHost: false
-    imageReference: {
-      publisher: 'MicrosoftWindowsServer'
-      offer: 'WindowsServer'
-      sku: '2022-datacenter-azure-edition'
-      version: 'latest'
-    }
-    nicConfigurations: [
-      {
-        ipConfigurations: [
-          {
-            name: 'ipconfig01'
-            subnetResourceId: virtualNetwork.outputs.subnetResourceIds[1]
-          }
-        ]
-        nicSuffix: '-nic-01'
-      }
-    ]
-    osDisk: {
-      diskSizeGB: '128'
-      managedDisk: {
-        storageAccountType: 'Standard_LRS'
-      }
-    }
-    osType: 'Windows'
-    vmSize: 'Standard_DS2_v2'
   }
 }
