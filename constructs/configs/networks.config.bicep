@@ -1,15 +1,12 @@
 targetScope = 'subscription'
 
 param identifier string
-param spokeVnetAddressPrefix array
-param vnetXAddressPrefix array
-param vnetYAddressPrefix array
-param networkManagerName string
-param networkManagerResourceGroupName string
+param resourceGroupName string
+param spokeVnetAddressPrefixAndDefaultSubnet string
+param vnetXAddressPrefixAndDefaultSubnet string
+param vnetYAddressPrefixAndDefaultSubnet string
 
 // Resource Group
-
-var resourceGroupName = 'rg-${identifier}'
 
 module resourceGroup '../../modules/Microsoft.Resources/resourceGroups/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-rg'
@@ -35,11 +32,13 @@ module virtualNetwork_spoke '../../modules/Microsoft.Network/virtualNetworks/dep
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-vnet-spoke'
   params: {
-    addressPrefixes: spokeVnetAddressPrefix
+    addressPrefixes: [
+      spokeVnetAddressPrefixAndDefaultSubnet
+    ]
     name: 'vnet-spoke-${identifier}'
     subnets: [
       {
-        addressPrefix: spokeVnetAddressPrefix[0]
+        addressPrefix: spokeVnetAddressPrefixAndDefaultSubnet
         name: 'sn-default-${identifier}-vnet-spoke'
         networkSecurityGroupId: networkSecurityGroupSubnetDefault_vnet_spoke.outputs.resourceId
       }
@@ -65,11 +64,13 @@ module virtualNetwork_x '../../modules/Microsoft.Network/virtualNetworks/deploy.
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-vnet-x'
   params: {
-    addressPrefixes: vnetXAddressPrefix
+    addressPrefixes: [
+      vnetXAddressPrefixAndDefaultSubnet
+    ]
     name: 'vnet-x-${identifier}'
     subnets: [
       {
-        addressPrefix: vnetXAddressPrefix[0]
+        addressPrefix: vnetXAddressPrefixAndDefaultSubnet
         name: 'sn-default-${identifier}-vnet-x'
         networkSecurityGroupId: networkSecurityGroupSubnetDefault_vnetX.outputs.resourceId
       }
@@ -77,7 +78,7 @@ module virtualNetwork_x '../../modules/Microsoft.Network/virtualNetworks/deploy.
   }
 }
 
-// VNET X
+// VNET Y
 
 module networkSecurityGroupSubnetDefault_vnety '../../modules/Microsoft.Network/networkSecurityGroups/deploy.bicep' = {
   scope: az.resourceGroup(resourceGroupName)
@@ -94,77 +95,16 @@ module virtualNetwork_y '../../modules/Microsoft.Network/virtualNetworks/deploy.
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-vnet-y'
   params: {
-    addressPrefixes: vnetYAddressPrefix
-    name: 'vnet-x-${identifier}'
+    addressPrefixes: [
+      vnetYAddressPrefixAndDefaultSubnet
+    ]
+    name: 'vnet-y-${identifier}'
     subnets: [
       {
-        addressPrefix: vnetYAddressPrefix[0]
+        addressPrefix: vnetYAddressPrefixAndDefaultSubnet
         name: 'sn-default-${identifier}-vnet-y'
         networkSecurityGroupId: networkSecurityGroupSubnetDefault_vnety.outputs.resourceId
       }
     ]
-  }
-}
-
-
-// AVNM Existing Config
-
-resource avnm 'Microsoft.Network/networkManagers@2022-07-01' existing = {
-  scope: az.resourceGroup(networkManagerResourceGroupName)
-  name: networkManagerName
-}
-
-// Network Group Resource
-
-module avnm_networkGroup '../../modules/Microsoft.Network/networkManagers/networkGroups/deploy.bicep' = {
-  name: '${uniqueString(deployment().name)}-networkGroup'
-  scope: az.resourceGroup(networkManagerResourceGroupName)
-  params: {
-    name: 'ng-${identifier}'
-    description: 'Network Group - Identifier - ${identifier}'
-    networkManagerName: avnm.name
-  }
-}
-
-// Policy Definition (Microsoft.Network.Data - Subscription Scope)
-
-module policyDefinition '../../modules/Microsoft.Authorization/policyDefinitions/subscription/deploy.bicep' = {
-  name: '${uniqueString(deployment().name)}-PolicyDefinition'
-  params: {
-    name: '[AVNM] pd-avnm-ng-${identifier}'
-    mode: 'Microsoft.Network.Data'
-    metadata: {
-      Category: 'Azure Virtual Network Manager'
-    }
-    policyRule: {
-      if: {
-        allOf: [
-          {
-            value: '[subscription().SubscriptionId]'
-            equals: subscription().id
-          }
-          {
-            value: '[resourceGroup().Name]'
-            contains: '-${identifier}-'
-          }
-        ]
-      }
-      then: {
-        effect: 'addToNetworkGroup'
-        details: {
-          networkGroupId: avnm_networkGroup.outputs.resourceId
-        }
-      }
-    }
-  }
-}
-
-// Policy Assignment (Subscription Scope)
-
-module policyAssignment '../../modules/Microsoft.Authorization/policyAssignments/subscription/deploy.bicep' = {
-  name: '${uniqueString(deployment().name)}-PolicyAssignment'
-  params: {
-    name: '[AVNM] pa-avnm-ng-${identifier}'
-    policyDefinitionId: policyDefinition.outputs.resourceId
   }
 }

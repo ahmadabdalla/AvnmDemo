@@ -1,10 +1,9 @@
 targetScope = 'subscription'
 
 param identifier string
-param hubVnetAddressSpace array = [
-  '10.0.0.0/24'
-  '10.0.1.0/24'
-]
+param hubVnetAddressSpace string
+param hubVnetBastionSubnetAddressSpace string
+param hubVnetDefaultSubnetAddressSpace string
 
 // Resource Group
 
@@ -187,16 +186,18 @@ module virtualNetwork '../../modules/Microsoft.Network/virtualNetworks/deploy.bi
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-vnet-hub'
   params: {
-    addressPrefixes: hubVnetAddressSpace
+    addressPrefixes: [
+      hubVnetAddressSpace
+    ]
     name: 'vnet-hub-${identifier}'
     subnets: [
       {
-        addressPrefix: hubVnetAddressSpace[0]
+        addressPrefix: hubVnetBastionSubnetAddressSpace
         name: 'AzureBastionSubnet'
         networkSecurityGroupId: nsg_subnet_bastion.outputs.resourceId
       }
       {
-        addressPrefix: hubVnetAddressSpace[1]
+        addressPrefix: hubVnetDefaultSubnetAddressSpace
         name: 'sn-default-${identifier}-vnet-hub'
         networkSecurityGroupId: nsg_subnet_default.outputs.resourceId
       }
@@ -228,3 +229,5 @@ module azureBastion '../../modules/Microsoft.Network/bastionHosts/deploy.bicep' 
     azureBastionSubnetPublicIpId: publicIpBastion.outputs.resourceId
   }
 }
+
+output hubVirtualNetworkResourceId string = virtualNetwork.outputs.resourceId
