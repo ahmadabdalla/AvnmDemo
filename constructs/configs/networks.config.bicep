@@ -21,7 +21,7 @@ module networkSecurityGroupSubnetDefault_vnet_spoke '../../modules/Microsoft.Net
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-nsg-sn-default-vnet-spoke'
   params: {
-    name: 'nsg-sn-default-${identifier}-vnet-spoke'
+    name: 'nsg-sn-default-vnet-spoke-${identifier}'
   }
   dependsOn: [
     resourceGroup
@@ -39,7 +39,7 @@ module virtualNetwork_spoke '../../modules/Microsoft.Network/virtualNetworks/dep
     subnets: [
       {
         addressPrefix: spokeVnetAddressPrefixAndDefaultSubnet
-        name: 'sn-default-${identifier}-vnet-spoke'
+        name: 'sn-default-vnet-spoke-${identifier}'
         networkSecurityGroupId: networkSecurityGroupSubnetDefault_vnet_spoke.outputs.resourceId
       }
     ]
@@ -53,7 +53,7 @@ module networkSecurityGroupSubnetDefault_vnetX '../../modules/Microsoft.Network/
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-nsg-sn-default-vnet-x'
   params: {
-    name: 'nsg-sn-default-${identifier}-vnet-x'
+    name: 'nsg-sn-default-vnet-x-${identifier}'
   }
   dependsOn: [
     resourceGroup
@@ -71,7 +71,7 @@ module virtualNetwork_x '../../modules/Microsoft.Network/virtualNetworks/deploy.
     subnets: [
       {
         addressPrefix: vnetXAddressPrefixAndDefaultSubnet
-        name: 'sn-default-${identifier}-vnet-x'
+        name: 'sn-default-vnet-x-${identifier}'
         networkSecurityGroupId: networkSecurityGroupSubnetDefault_vnetX.outputs.resourceId
       }
     ]
@@ -84,7 +84,7 @@ module networkSecurityGroupSubnetDefault_vnety '../../modules/Microsoft.Network/
   scope: az.resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name)}-nsg-sn-default-vnet-y'
   params: {
-    name: 'nsg-sn-default-${identifier}-vnet-y'
+    name: 'nsg-sn-default-vnet-y-${identifier}'
   }
   dependsOn: [
     resourceGroup
@@ -102,7 +102,7 @@ module virtualNetwork_y '../../modules/Microsoft.Network/virtualNetworks/deploy.
     subnets: [
       {
         addressPrefix: vnetYAddressPrefixAndDefaultSubnet
-        name: 'sn-default-${identifier}-vnet-y'
+        name: 'sn-default-vnet-y-${identifier}'
         networkSecurityGroupId: networkSecurityGroupSubnetDefault_vnety.outputs.resourceId
       }
     ]

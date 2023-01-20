@@ -2,7 +2,7 @@ targetScope = 'subscription'
 
 // Resource Group Configuration
 param networkManagerName string = 'avnm-demo'
-param resourceGroupName string
+param resourceGroupName_AVNM string
 param hubVnetBastionSubnetAddressSpace string
 param hubVirtualNetworkResourceId string
 param alphaNetworksResourceGroupName string
@@ -11,12 +11,12 @@ param betaNetworksResourceGroupName string
 module resourceGroup '../../modules/Microsoft.Resources/resourceGroups/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-avnm-rg'
   params: {
-    name: resourceGroupName
+    name: resourceGroupName_AVNM
   }
 }
 
 module avnm '../../modules/Microsoft.Network/networkManagers/deploy.bicep' = {
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   name: '${uniqueString(deployment().name)}-avnm-Config'
   params: {
     name: networkManagerName
@@ -39,7 +39,7 @@ module avnm '../../modules/Microsoft.Network/networkManagers/deploy.bicep' = {
 
 module networkGroup_Spokes '../../modules/Microsoft.Network/networkManagers/networkGroups/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-networkGroup-Spokes'
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   params: {
     name: 'ng-spokes'
     description: 'Spokes Virtual Networks Group'
@@ -90,7 +90,7 @@ module policyAssignment_Spokes '../../modules/Microsoft.Authorization/policyAssi
 
 module networkGroup_Alpha '../../modules/Microsoft.Network/networkManagers/networkGroups/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-networkGroup-Alpha'
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   params: {
     name: 'ng-alpha'
     description: 'Alpha Virtual Networks Group'
@@ -141,7 +141,7 @@ module policyAssignment_Alpha '../../modules/Microsoft.Authorization/policyAssig
 
 module networkGroup_Beta '../../modules/Microsoft.Network/networkManagers/networkGroups/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-networkGroup-Beta'
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   params: {
     name: 'ng-beta'
     description: 'Beta Virtual Networks Group'
@@ -195,7 +195,7 @@ module policyAssignment_Beta '../../modules/Microsoft.Authorization/policyAssign
 
 module connectivityConfig_HubSpoke '../../modules/Microsoft.Network/networkManagers/connectivityConfigurations/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-Conn-Config-Hub-Spoke'
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   params: {
     connectivityTopology: 'HubAndSpoke'
     name: 'config-connectivity-HubSpoke-vnets'
@@ -223,7 +223,7 @@ module connectivityConfig_HubSpoke '../../modules/Microsoft.Network/networkManag
 
 module connectivityConfig_Mesh_Alpha '../../modules/Microsoft.Network/networkManagers/connectivityConfigurations/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-Conn-Config-Mesh-Alpha'
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   params: {
     connectivityTopology: 'Mesh'
     name: 'config-connectivity-alpha-vnets'
@@ -245,7 +245,7 @@ module connectivityConfig_Mesh_Alpha '../../modules/Microsoft.Network/networkMan
 
 module connectivityConfig_Mesh_Beta '../../modules/Microsoft.Network/networkManagers/connectivityConfigurations/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-Conn-Config-Mesh-Beta'
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   params: {
     connectivityTopology: 'Mesh'
     name: 'config-connectivity-beta-vnets'
@@ -268,7 +268,7 @@ module connectivityConfig_Mesh_Beta '../../modules/Microsoft.Network/networkMana
 
 module securityAdminConfig_Spokes '../../modules/Microsoft.Network/networkManagers/securityAdminConfigurations/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-SecurityAdmin-Config-Spokes'
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   params: {
     name: 'config-security-spokes'
     networkManagerName: avnm.outputs.name
@@ -281,7 +281,7 @@ module securityAdminConfig_Spokes '../../modules/Microsoft.Network/networkManage
 
 module ruleCollection_securityAdminConfig_Spokes '../../modules/Microsoft.Network/networkManagers/securityAdminConfigurations/ruleCollections/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-RuleCollection-Spokes'
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_AVNM)
   params: {
     name: 'rc-spokes-vnets'
     appliesToGroups: [
@@ -312,62 +312,6 @@ module ruleCollection_securityAdminConfig_Spokes '../../modules/Microsoft.Networ
           '22'
         ]
         priority: 200
-        protocol: 'Any'
-      }
-    ]
-  }
-}
-
-/// Security Admin Connectivity Config for Alpha and Beta Virtual Networks
-
-module securityAdminConfig_AlphaBeta '../../modules/Microsoft.Network/networkManagers/securityAdminConfigurations/deploy.bicep' = {
-  name: '${uniqueString(deployment().name)}-SecurityAdmin-Config-AlphaBeta'
-  scope: az.resourceGroup(resourceGroupName)
-  params: {
-    name: 'config-security-alphabeta'
-    networkManagerName: avnm.outputs.name
-    description: 'Security Admin Configuration for Spokes Virtual Networks'
-    applyOnNetworkIntentPolicyBasedServices: [
-      'None'
-    ]
-  }
-}
-
-module ruleCollection_securityAdminConfig_AlphaBeta '../../modules/Microsoft.Network/networkManagers/securityAdminConfigurations/ruleCollections/deploy.bicep' = {
-  name: '${uniqueString(deployment().name)}-RuleCollection-AlphaBeta'
-  scope: az.resourceGroup(resourceGroupName)
-  params: {
-    name: 'rc-alphabeta-vnets'
-    appliesToGroups: [
-      {
-        networkGroupId: networkGroup_Alpha.outputs.resourceId
-      }
-      {
-        networkGroupId: networkGroup_Beta.outputs.resourceId
-      }
-    ]
-    networkManagerName: avnm.outputs.name
-    securityAdminConfigurationName: securityAdminConfig_AlphaBeta.outputs.name
-    rules: [
-      {
-        name: 'Inbound-FROM-Any-TO-Any-P-RDPSSH-AlwaysAllow'
-        sources: [
-          {
-            addressPrefix: '*'
-          }
-        ]
-        access: 'Deny'
-        direction: 'Inbound'
-        destinations: [
-          {
-            addressPrefix: '*'
-          }
-        ]
-        destinationPortRanges: [
-          '3389'
-          '22'
-        ]
-        priority: 210
         protocol: 'Any'
       }
     ]

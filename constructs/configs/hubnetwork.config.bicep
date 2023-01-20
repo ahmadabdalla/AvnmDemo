@@ -1,29 +1,27 @@
 targetScope = 'subscription'
 
 param identifier string
+param resourceGroupName_Hub string
 param hubVnetAddressSpace string
 param hubVnetBastionSubnetAddressSpace string
 param hubVnetDefaultSubnetAddressSpace string
 
 // Resource Group
-
-var resourceGroupName = 'rg-${identifier}'
-
 module resourceGroup '../../modules/Microsoft.Resources/resourceGroups/deploy.bicep' = {
   name: '${uniqueString(deployment().name)}-rg'
   params: {
-    name: resourceGroupName
+    name: resourceGroupName_Hub
   }
 }
 
 module nsg_subnet_bastion '../../modules/Microsoft.Network/networkSecurityGroups/deploy.bicep' = {
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_Hub)
   name: '${uniqueString(deployment().name)}-nsg-sn-bastionSubnet-vnet-hub'
   dependsOn: [
     resourceGroup
   ]
   params: {
-    name: 'nsg-sn-bastionSubnet-${identifier}-vnet-hub'
+    name: 'nsg-sn-bastionSubnet-vnet-hub-${identifier}'
     securityRules: [
       {
         name: 'AllowHttpsInBound'
@@ -172,18 +170,18 @@ module nsg_subnet_bastion '../../modules/Microsoft.Network/networkSecurityGroups
 }
 
 module nsg_subnet_default '../../modules/Microsoft.Network/networkSecurityGroups/deploy.bicep' = {
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_Hub)
   name: '${uniqueString(deployment().name)}-nsg-sn-default-vnet-hub'
   dependsOn: [
     resourceGroup
   ]
   params: {
-    name: 'nsg-sn-default-${identifier}-vnet-hub'
+    name: 'nsg-sn-default-vnet-hub-${identifier}'
   }
 }
 
 module virtualNetwork '../../modules/Microsoft.Network/virtualNetworks/deploy.bicep' = {
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_Hub)
   name: '${uniqueString(deployment().name)}-vnet-hub'
   params: {
     addressPrefixes: [
@@ -198,7 +196,7 @@ module virtualNetwork '../../modules/Microsoft.Network/virtualNetworks/deploy.bi
       }
       {
         addressPrefix: hubVnetDefaultSubnetAddressSpace
-        name: 'sn-default-${identifier}-vnet-hub'
+        name: 'sn-default-vnet-hub-${identifier}'
         networkSecurityGroupId: nsg_subnet_default.outputs.resourceId
       }
     ]
@@ -206,7 +204,7 @@ module virtualNetwork '../../modules/Microsoft.Network/virtualNetworks/deploy.bi
 }
 
 module publicIpBastion '../../modules/Microsoft.Network/publicIPAddresses/deploy.bicep' = {
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_Hub)
   name: '${uniqueString(deployment().name)}-bst-pip'
   params: {
     name: 'pip-bst-vnet-hub-${identifier}'
@@ -219,7 +217,7 @@ module publicIpBastion '../../modules/Microsoft.Network/publicIPAddresses/deploy
 }
 
 module azureBastion '../../modules/Microsoft.Network/bastionHosts/deploy.bicep' = {
-  scope: az.resourceGroup(resourceGroupName)
+  scope: az.resourceGroup(resourceGroupName_Hub)
   name: '${uniqueString(deployment().name)}-bst'
   params: {
     name: 'bst-vnet-hub-${identifier}'
