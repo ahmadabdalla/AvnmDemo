@@ -288,11 +288,25 @@ Get-AzNetworkManagerDeploymentStatus -NetworkManagerName $NetworkManagerName `
 
 #endregion
 
+#region ####### PART 10 - Verify Bastion connectivity to the spoke virtual machine ######
 
-#region ####### PART 10 - Decomissioning the lab environment ######
+# 1. Go to the Azure Portal
+# 2. Search for the Hub VM 'vm-alpha-spoke'
+# 3. Click on 'Connect', and then select 'Bastion'
+# 4. Input the Username and Password you configured in Part (2) of the Lab.
+# 5. You should have a new Tab opened with an RDP session into the 'vm-spoke-alpha' using Azure Bastion.
+
+# ==> Notice that now there is connectivity established to the spoke virtual machine via Azure Bastion, although the NSG rule is denying it.. 
+    # That is because AVNM Always Allow rules supersede NSG rules, and the matching rule does not get delivered to the NSG.
+
+#endregion
+
+#region ####### PART 11 - Decomissioning the lab environment ######
 
 # 1. To delete the lab environment. Run the following in PowerShell:
 
     . .\Remove-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -ErrorAction Stop
 
     # This will delete the AVNM Azure Policies, and related resource groups used in this lab.
+
+#endregion
