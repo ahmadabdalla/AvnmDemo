@@ -22,7 +22,10 @@ param (
     [string] $SubscriptionId,
 
     [Parameter(Mandatory)]
-    [string] $Location
+    [string] $Location,
+
+    [Parameter(Mandatory)]
+    [string] $TemplateFile
 )
 
 
@@ -32,12 +35,12 @@ try {
     $modules = @(
         'Az.Accounts'
         'Az.Resources'
-        'Az.Networks'
+        'Az.Network'
         'Az.Compute'
     )
 
     $modules | Foreach-Object {
-        if(!(Get-Module $PSItem -ErrorAction Stop)){
+        if(!(Get-Module $PSItem -ListAvailable -ErrorAction Stop)){
             Write-Error "Module $PSItem Not found.. Install by running 'Install-Module $PSItem -Force -AllowClobber'"
         }
     }
@@ -66,6 +69,6 @@ catch {
 
 ## Deploy Demo Template (Takes about 15-20 minutes to complete)
 
-New-AzDeployment -Name $DeploymentName -Location $Location -TemplateFile 'main.deploy.bicep'
+New-AzDeployment -Name $DeploymentName -Location $Location -TemplateFile $TemplateFile
 
 
