@@ -5,7 +5,7 @@ $Location = 'australiaeast' ###### CHANGE ME (OPTIONAL) ######
 
 #region ####### PART 1 - Creating the AVNM Demo Environment (15 minutes) ######
 
-. .\scripts\Deploy-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -Location $Location -ErrorAction Stop
+. .\scripts\Deploy-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -Location $Location -TemplateFile .\main.deploy.bicep -ErrorAction Stop
 
 #endregion
  
@@ -305,7 +305,7 @@ Get-AzNetworkManagerDeploymentStatus -NetworkManagerName $NetworkManagerName `
 
 # 1. To delete the lab environment. Run the following in PowerShell:
 
-    . .\Remove-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -ErrorAction Stop
+    . .\scripts\Remove-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -ErrorAction Stop
 
     # This will delete the AVNM Azure Policies, and related resource groups used in this lab.
 

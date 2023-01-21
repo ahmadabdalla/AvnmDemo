@@ -50,7 +50,9 @@ catch {
 ## Connect To Azure
 
 try {
-    Connect-AzAccount -SubscriptionId $SubscriptionId
+    if ((Get-AzContext).Subscription.Id -ne $SubscriptionId) {
+        Connect-AzAccount -SubscriptionId $SubscriptionId
+    }  
 }
 catch {
     throw $PSItem

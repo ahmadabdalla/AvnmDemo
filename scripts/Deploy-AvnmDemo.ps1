@@ -35,12 +35,12 @@ try {
     $modules = @(
         'Az.Accounts'
         'Az.Resources'
-        'Az.Networks'
+        'Az.Network'
         'Az.Compute'
     )
 
     $modules | Foreach-Object {
-        if(!(Get-Module $PSItem -ErrorAction Stop)){
+        if(!(Get-Module $PSItem -ListAvailable -ErrorAction Stop)){
             Write-Error "Module $PSItem Not found.. Install by running 'Install-Module $PSItem -Force -AllowClobber'"
         }
     }
