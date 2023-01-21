@@ -5,7 +5,7 @@ $Location = 'australiaeast' ###### CHANGE ME (OPTIONAL) ######
 
 #region ####### PART 1 - Creating the AVNM Demo Environment (15 minutes) ######
 
-. .\Deploy-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -Location $Location -ErrorAction Stop
+. .\scripts\Deploy-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -Location $Location -ErrorAction Stop
 
 #endregion
  

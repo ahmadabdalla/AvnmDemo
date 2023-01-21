@@ -22,7 +22,10 @@ param (
     [string] $SubscriptionId,
 
     [Parameter(Mandatory)]
-    [string] $Location
+    [string] $Location,
+
+    [Parameter(Mandatory)]
+    [string] $TemplateFile
 )
 
 
@@ -66,6 +69,6 @@ catch {
 
 ## Deploy Demo Template (Takes about 15-20 minutes to complete)
 
-New-AzDeployment -Name $DeploymentName -Location $Location -TemplateFile 'main.deploy.bicep'
+New-AzDeployment -Name $DeploymentName -Location $Location -TemplateFile $TemplateFile
 
 
