@@ -1,9 +1,14 @@
 
+## Welcome to the Azure Virtual Network Manager (AVNM) Demo
+
+## This script contains different sections meant to be run in sequence in order to achieve the lab outcome. 
+## Start by providing the subscription ID for your environment, and the location where you want to deploy the resources.
+## Ensure that you have the right permissions to deploy into the subscription and that AVNM is available in the region you are deploying in. The default is 'Australia East'
+
+#region ####### PART 1 - Creating the AVNM Demo Environment (15 minutes) ######
 
 $SubscriptionId = '12345678-1234-1234-1234-123456789012' ###### CHANGE ME ######
 $Location = 'australiaeast' ###### CHANGE ME (OPTIONAL) ######
-
-#region ####### PART 1 - Creating the AVNM Demo Environment (15 minutes) ######
 
 . .\scripts\Deploy-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -Location $Location -TemplateFile .\main.deploy.bicep -ErrorAction Stop
 
