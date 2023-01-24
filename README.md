@@ -2,7 +2,7 @@
 
 This repository contains a demo implementation for [Azure Virtual Network Manager (AVNM)](https://learn.microsoft.com/en-us/azure/virtual-network-manager/overview) using Infrastructure as Code with [Bicep](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview?tabs=bicep). The demo uses Bicep modules from [Common Azure Resources Modules Library (CARML)](https://aka.ms/carml) to provision the following design:
 
-**PENDING DIAGRAM**
+![avnm_demo](images/avnm_demo.png)
 
 # Requirements
 
@@ -75,7 +75,7 @@ The repo is structured in the following way:
 
 1. Clone this GitHub repository on your workstation. See this [GitHub guide](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) for more details.
 2. Open Visual Studio Code on your workstation where the cloned repo is located.
-3. Open the [Deploy-AvnmDemo.ps1](https://github.com/ahmadabdalla/AvnmDemo/blob/main/Deploy-AvnmDemo.ps1) from within VS Code.
+3. Open the [Demo-Guide.ps1](https://github.com/ahmadabdalla/AvnmDemo/blob/main/Demo-Guide.ps1) from within VS Code.
 4. The demo guide in this script should contain the required sequence of sections to successfully deploy and remove this lab.
 
 # What is the demo deploying?
