@@ -7,7 +7,7 @@
 
 #region ####### PART 1 - Creating the AVNM Demo Environment (15 minutes) ######
 
-$SubscriptionId = '20d6fbfe-b049-471c-95af-1369d14d0d45' ###### CHANGE ME ######
+$SubscriptionId = '12345678-1234-1234-1234-123456789012' ###### CHANGE ME ######
 $Location = 'australiaeast' ###### CHANGE ME (OPTIONAL) ######
 
 . .\scripts\Deploy-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -Location $Location -TemplateFile .\main.deploy.bicep -ErrorAction Stop
