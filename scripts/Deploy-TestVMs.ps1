@@ -54,6 +54,11 @@ try {
         -PublicIpAddressName '' `
         -WarningAction SilentlyContinue
     
+    $HubVmNic = Get-AzNetworkInterface -Name 'vm-hub' -ResourceGroupName 'rg-demo-hub'
+    $HubVmNic.NetworkSecurityGroup = $null
+    Set-AzNetworkInterface -NetworkInterface $HubVmNic | Out-Null
+    Get-AzNetworkSecurityGroup -Name 'vm-hub' -ResourceGroupName 'rg-demo-hub' -ErrorAction SilentlyContinue | Remove-AzNetworkSecurityGroup -Force -ErrorAction SilentlyContinue
+
     Write-Host "Deploying Demo VM [vm-alpha-spoke].. ETA: 5 minutes" -ForegroundColor Yellow
     ## ALPHA Spoke VM
     New-AzVm `
@@ -67,6 +72,11 @@ try {
         -PublicIpAddressName '' `
         -WarningAction SilentlyContinue
 
+    $SpokeVmNic = Get-AzNetworkInterface -Name 'vm-alpha-spoke' -ResourceGroupName 'rg-demo-alpha'
+    $SpokeVmNic.NetworkSecurityGroup = $null
+    Set-AzNetworkInterface -NetworkInterface $SpokeVmNic | Out-Null
+    Get-AzNetworkSecurityGroup -Name 'vm-alpha-spoke' -ResourceGroupName 'rg-demo-alpha' -ErrorAction SilentlyContinue | Remove-AzNetworkSecurityGroup -Force -ErrorAction SilentlyContinue
+    
     Write-Host "Deploying Demo VM [vm-alpha-x].. ETA: 5 minutes" -ForegroundColor Yellow
     ## ALPHA X VM
     New-AzVm `
@@ -79,6 +89,11 @@ try {
         -Size 'Standard_B2s' `
         -PublicIpAddressName '' `
         -WarningAction SilentlyContinue
+
+        $ExtVmNic = Get-AzNetworkInterface -Name 'vm-alpha-x' -ResourceGroupName 'rg-demo-alpha'
+        $ExtVmNic.NetworkSecurityGroup = $null
+        Set-AzNetworkInterface -NetworkInterface $ExtVmNic | Out-Null
+        Get-AzNetworkSecurityGroup -Name 'vm-alpha-x' -ResourceGroupName 'rg-demo-alpha' -ErrorAction SilentlyContinue | Remove-AzNetworkSecurityGroup -Force -ErrorAction SilentlyContinue
 }
 catch {
     throw $PSItem.Exception.Message
