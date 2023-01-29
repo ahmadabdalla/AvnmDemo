@@ -10,7 +10,6 @@ param (
     [PSCredential]$Credential
 )
 
-
 ## Check Required Azure PowerShell Modules
 
 try {

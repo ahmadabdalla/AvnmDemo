@@ -33,14 +33,14 @@ try {
     )
     Write-Host "Validating required PowerShell Modules: `n$($modules | Out-String)" -ForegroundColor Yellow
     $modules | Foreach-Object {
-        if(!(Get-Module $PSItem -ListAvailable -ErrorAction Stop)){
+        if (!(Get-Module $PSItem -ListAvailable -ErrorAction Stop)) {
             Write-Error "Module $PSItem Not found.. Install by running 'Install-Module $PSItem -Force -AllowClobber'"
         }
     }
     
     ## Check if Azure Network Manager Cmdlets are available in the 'Az.Network' Module
     Write-Host "Checking AzNetworkManager Cmdlets in the 'Az.Network' PowerShell module" -ForegroundColor Yellow
-    if(!(Get-Command Get-AzNetworkManager -Module Az.Network)){
+    if (!(Get-Command Get-AzNetworkManager -Module Az.Network)) {
         Write-Error "Module 'Az.Network' Not found.. Update module by running 'Update-Module 'Az.Network' -Force'"
     }
 }
