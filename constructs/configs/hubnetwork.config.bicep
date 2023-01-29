@@ -121,7 +121,7 @@ module nsg_subnet_bastion '../../modules/Microsoft.Network/networkSecurityGroups
         }
       }
       {
-        name: 'AllowBastionHostCommunicationOutBound"'
+        name: 'AllowBastionHostCommunicationOutBound'
         properties: {
           protocol: '*'
           sourcePortRange: '*'

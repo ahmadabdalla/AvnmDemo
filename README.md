@@ -68,7 +68,7 @@ The repo is structured in the following way:
 - **Constructs**: Contains the Bicep configuration files for the demo.
 - **Modules**: Contains the [Common Azure Resources Modules Library (CARML)](https://aka.ms/carml) modules used by the constructs (configuration files) to deploy the demo.
 - **Scripts**: Contains scripts that supports the demo.
-- [**Demo-Guide.ps1**](https://github.com/ahmadabdalla/AvnmDemo/blob/main/Deploy-AvnmDemo.ps1): Is a script that goes through the demo step by step.
+- [**Demo-Guide.ps1**](https://github.com/ahmadabdalla/AvnmDemo/blob/main/Demo-Guide.ps1): Is a script that goes through the demo step by step.
 - [**main.deploy.bicep**](https://github.com/ahmadabdalla/AvnmDemo/blob/main/main.deploy.bicep): Is the main Bicep file used to demo the demo.
 
 # How to start the demo?

@@ -7,59 +7,20 @@
 
 #region ####### PART 1 - Creating the AVNM Demo Environment (15 minutes) ######
 
-$SubscriptionId = '12345678-1234-1234-1234-123456789012' ###### CHANGE ME ######
+$SubscriptionId = '20d6fbfe-b049-471c-95af-1369d14d0d45' ###### CHANGE ME ######
 $Location = 'australiaeast' ###### CHANGE ME (OPTIONAL) ######
 
 . .\scripts\Deploy-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -Location $Location -TemplateFile .\main.deploy.bicep -ErrorAction Stop
 
 #endregion
  
-
 #region ####### PART 2 - Create Demo Virtual Machines in the environment ######
 
 $Credential = Get-Credential
 
-## Hub VM
-New-AzVm `
-    -ResourceGroupName 'rg-demo-hub' `
-    -Name 'vm-hub' `
-    -Location $Location `
-    -VirtualNetworkName 'vnet-hub-demo' `
-    -SubnetName 'sn-default-vnet-hub-demo' `
-    -Credential $Credential `
-    -Size 'Standard_B2s' `
-    -AsJob
-
-## ALPHA Spoke VM
-New-AzVm `
-    -ResourceGroupName 'rg-demo-alpha' `
-    -Name 'vm-alpha-spoke' `
-    -Location $Location `
-    -VirtualNetworkName 'vnet-spoke-alpha' `
-    -SubnetName 'sn-default-vnet-spoke-alpha' `
-    -Credential $Credential `
-    -Size 'Standard_B2s' `
-    -AsJob
-
-## ALPHA X VM
-New-AzVm `
-    -ResourceGroupName 'rg-demo-alpha' `
-    -Name 'vm-alpha-x' `
-    -Location $Location `
-    -VirtualNetworkName 'vnet-x-alpha' `
-    -SubnetName 'sn-default-vnet-x-alpha' `
-    -Credential $Credential `
-    -Size 'Standard_B2s' `
-    -AsJob
-
-# Wait for 5 minutes for the virtual machines to be created.
-# TO see the Virtual machines status using PowerShell, ensure you have the latest 'Az.Compute' PowerShell module installed with at least version (5.1.1). Execute the following:
-# You can also install the modules by running (Install-Module Az.Network -Force -AllowClobber)
-
-Get-AzVm -Status | Where-Object -Property ResourceGroupName -like "rg-demo-*" | Select-Object -Property Name, PowerState 
+. .\scripts\Deploy-TestVms.ps1 -SubscriptionId $SubscriptionId -Location $Location -Credential $Credential
 
 #endregion
-
 
 #region ####### PART 3 - Validating connectivity to the Hub virtual machine ######
 
@@ -86,15 +47,15 @@ Get-AzVm -Status | Where-Object -Property ResourceGroupName -like "rg-demo-*" | 
 # 2. Search for the Virtual Network Manager 'avnm-demo'
 # 3. From the blade menu, click on 'Configurations'
 # 4. Select the 3 connectivity configurations options as below: 
-    # - config-connectivity-HubSpoke-vnets ==> Deploys Hub-Spoke topology between the Hub VNET and the Spoke VNETs
-    # - config-connectivity-alpha-vnets ==> Deploys a Mesh topology for all 'alpha' VNETs
-    # - config-connectivity-beta-vnets ==> Deploys a Mesh topology for all 'beta' VNETs
+# - config-connectivity-HubSpoke-vnets ==> Deploys Hub-Spoke topology between the Hub VNET and the Spoke VNETs
+# - config-connectivity-alpha-vnets ==> Deploys a Mesh topology for all 'alpha' VNETs
+# - config-connectivity-beta-vnets ==> Deploys a Mesh topology for all 'beta' VNETs
 
 # 5. Click on 'Deploy'
 # 6. In the Deploy menu, select the 'Target Regions' as your location for deployment (i.e. australiaeast) and then click 'Next'
 # 7. Notice the following:
-    # - Existing configurations are empty, which represents the current state of your environment efore deployment.
-    # - Goal state are showing 3 'Add' configurations, which represents the target state of your environment after deployment.
+# - Existing configurations are empty, which represents the current state of your environment efore deployment.
+# - Goal state are showing 3 'Add' configurations, which represents the target state of your environment after deployment.
 # 8. Now click on 'Deploy'. This will submit a deployment to AVNM to create your connectivity goal state.
 
 # TO perform these steps using PowerShell, ensure you have the latest 'Az.Network' PowerShell module installed with at least version (5.1.2). Execute the following:
@@ -120,20 +81,20 @@ Deploy-AzNetworkManagerCommit -CommitType 'Connectivity' `
 # 10. Notice there are 3 connectvity deployments that were triggered, and notice the status of the 'deployment'.
 # 11. To get the deployment status of the configuration, you can run the following:
     
-    Get-AzNetworkManagerDeploymentStatus -NetworkManagerName $NetworkManagerName `
-        -ResourceGroupName $NetworkManagerResourceGroupName `
-        -Region $Location `
-        -DeploymentType 'connectivity' | 
-        Select-Object -ExpandProperty Value | 
-        Select-Object -Property CommitTime, Region, DeploymentStatus, DeploymentType
+Get-AzNetworkManagerDeploymentStatus -NetworkManagerName $NetworkManagerName `
+    -ResourceGroupName $NetworkManagerResourceGroupName `
+    -Region $Location `
+    -DeploymentType 'connectivity' | 
+Select-Object -ExpandProperty Value | 
+Select-Object -Property CommitTime, Region, DeploymentStatus, DeploymentType
 
 # 12. To validate the active connectivity configuration for the environment, you can run the following:
     
-    Get-AzNetworkManagerActiveConnectivityConfiguration -NetworkManagerName $NetworkManagerName `
-        -ResourceGroupName $NetworkManagerResourceGroupName `
-        -Region $Location | 
-        Select-Object -ExpandProperty Value | 
-        ForEach-Object {$PSItem | Select-Object -Property Description, ConnectivityTopology, ProvisioningState}
+Get-AzNetworkManagerActiveConnectivityConfiguration -NetworkManagerName $NetworkManagerName `
+    -ResourceGroupName $NetworkManagerResourceGroupName `
+    -Region $Location | 
+Select-Object -ExpandProperty Value | 
+ForEach-Object { $PSItem | Select-Object -Property Description, ConnectivityTopology, ProvisioningState }
 
 #endregion
 
@@ -149,8 +110,8 @@ Deploy-AzNetworkManagerCommit -CommitType 'Connectivity' `
 
 # You can also check the status of the peering by using PowerShell:
 
-    Get-AzVirtualNetworkPeering -VirtualNetworkName 'vnet-hub-demo' -ResourceGroupName 'rg-demo-hub' | Select-Object -Property Name, VirtualNetworkName, PeeringState 
-    Get-AzVirtualNetworkPeering -VirtualNetworkName 'vnet-spoke-alpha' -ResourceGroupName 'rg-demo-alpha' | Select-Object -Property Name, VirtualNetworkName, PeeringState  
+Get-AzVirtualNetworkPeering -VirtualNetworkName 'vnet-hub-demo' -ResourceGroupName 'rg-demo-hub' | Select-Object -Property Name, VirtualNetworkName, PeeringState 
+Get-AzVirtualNetworkPeering -VirtualNetworkName 'vnet-spoke-alpha' -ResourceGroupName 'rg-demo-alpha' | Select-Object -Property Name, VirtualNetworkName, PeeringState  
 
 # Hub-Spoke Connectivity Configuration in AVNM uses the standard Virtual Network Peering technology.
 
@@ -162,7 +123,7 @@ Deploy-AzNetworkManagerCommit -CommitType 'Connectivity' `
 # 2. Once you are inside the spoke VM 'vm-alpha-spoke', we need to establish another RDP session into the virtual machine 'vm-alpha-x'
 # 3. You can retrieve the IP address for the virtual machine either from the Virtual machine blade in the Azure Portal, or by running:
 
-    $Vm_AlphaX_NetworkProfile_Id = (Get-Azvm -Name 'vm-alpha-x' -ResourceGroupName 'rg-demo-alpha').NetworkProfile.NetworkInterfaces[0].Id
+$Vm_AlphaX_NetworkProfile_Id = (Get-Azvm -Name 'vm-alpha-x' -ResourceGroupName 'rg-demo-alpha').NetworkProfile.NetworkInterfaces[0].Id
     (Get-AzNetworkInterface -ResourceId $Vm_AlphaX_NetworkProfile_Id).IpConfigurations.PrivateIpAddress
 
 # 4. Establish an RDP session to the IP Address that you fetched above.
@@ -170,31 +131,31 @@ Deploy-AzNetworkManagerCommit -CommitType 'Connectivity' `
 # 6. You should be able establish an RDP session into the virtual machine 'vm-alpha-x' from the 'vm-alpha-spoke' virtual machine.
 
 # This connectivity was achieved using the Mesh Connectivity Configuration in AVNM. It uses the new 'Connected Group' Construct which is different
-    # from Hub-Spoke. 
+# from Hub-Spoke. 
 
 # 7. Let us see the effective route table for the network interface for the virtual machine 'vm-alpha-x'. Using the below PowerShell command:
 
 Get-AzEffectiveRouteTable -NetworkInterfaceName $Vm_AlphaX_NetworkProfile_Id.Split('/')[-1] -ResourceGroupName 'rg-demo-alpha' | 
-    Where-Object -Property NextHopType -NE 'None' | 
-    Select-Object -Property NextHopType, AddressPrefix, State
+Where-Object -Property NextHopType -NE 'None' | 
+Select-Object -Property NextHopType, AddressPrefix, State
 
-    # Notice here that there are three entries:
-        # - VnetLocal ==> Represents the Address Prefix of the virtual network
-        # - ConnectedGroup ==> Represents the AVNM Mesh VNet address prefixes. In this case, it is the virtual networks 'vnet-spoke-alpha' and 'vnet-alpha-y'
-        # - Internet ==> Standard route table entry for internet traffic
+# Notice here that there are three entries:
+# - VnetLocal ==> Represents the Address Prefix of the virtual network
+# - ConnectedGroup ==> Represents the AVNM Mesh VNet address prefixes. In this case, it is the virtual networks 'vnet-spoke-alpha' and 'vnet-alpha-y'
+# - Internet ==> Standard route table entry for internet traffic
 
 # 8. Similarly, let us see the effective route table for the network interface for the virtual machine 'vm-alpha-spoke'. Using the the below PowerShell command:
 
 $Vm_AlphaSpoke_NetworkProfile_Id = (Get-Azvm -Name 'vm-alpha-spoke' -ResourceGroupName 'rg-demo-alpha').NetworkProfile.NetworkInterfaces[0].Id
 Get-AzEffectiveRouteTable -NetworkInterfaceName $Vm_AlphaSpoke_NetworkProfile_Id.Split('/')[-1] -ResourceGroupName 'rg-demo-alpha' | 
-    Where-Object -Property NextHopType -NE 'None' |  
-    Select-Object -Property NextHopType, AddressPrefix, State
+Where-Object -Property NextHopType -NE 'None' |  
+Select-Object -Property NextHopType, AddressPrefix, State
 
-    # Notice here that there are four entries:
-        # - VnetLocal ==> Represents the Address Prefix of the virtual network
-        # - VNetPeering ==> Represents the AVNM Hub-Spoke configuration. In this case, it is the hub virtual network 'vnet-hub'
-        # - ConnectedGroup ==> Represents the AVNM Mesh VNet address prefixes. In this case, it is the virtual networks 'vnet-alpha-x' and 'vnet-alpha-y'
-        # - Internet ==> Standard route table entry for internet traffic
+# Notice here that there are four entries:
+# - VnetLocal ==> Represents the Address Prefix of the virtual network
+# - VNetPeering ==> Represents the AVNM Hub-Spoke configuration. In this case, it is the hub virtual network 'vnet-hub'
+# - ConnectedGroup ==> Represents the AVNM Mesh VNet address prefixes. In this case, it is the virtual networks 'vnet-alpha-x' and 'vnet-alpha-y'
+# - Internet ==> Standard route table entry for internet traffic
 
 #endregion
 
@@ -210,29 +171,29 @@ Get-AzEffectiveRouteTable -NetworkInterfaceName $Vm_AlphaSpoke_NetworkProfile_Id
 # 6. From the Azure Portal, now search for the NSG 'nsg-sn-default-vnet-spoke-alpha'
 # 7. Let us add a block rule to this NSG on port 3389 from any source. Click on the 'Inbound Rules' section from the NSG blade. And select 'Add'.
 # 8. Create the rule as following:
-    #- Source: Any
-    #- Source Port ranges: *
-    #- Destination: Any
-    #- Service: Custom
-    #- Destination Port ranges: 3389
-    #- Protocol: Any
-    #- Action: Deny
-    #- Priority: 100
-    #- Name: Deny_RDP_Into_the_Subnet_from_Any
+#- Source: Any
+#- Source Port ranges: *
+#- Destination: Any
+#- Service: Custom
+#- Destination Port ranges: 3389
+#- Protocol: Any
+#- Action: Deny
+#- Priority: 100
+#- Name: Deny_RDP_Into_the_Subnet_from_Any
 
-    # You can also enable this rule using PowerShell by running:
-        $NSG = Get-AzNetworkSecurityGroup -Name 'nsg-sn-default-vnet-spoke-alpha' -ResourceGroupName 'rg-demo-alpha'
-        Add-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $NSG `
-            -Name 'Deny_RDP_Into_the_Subnet_from_Any' `
-            -Protocol '*' `
-            -SourcePortRange '*' `
-            -DestinationPortRange '3389' `
-            -SourceAddressPrefix '*' `
-            -DestinationAddressPrefix '*' `
-            -Direction 'Inbound' `
-            -Priority 100 `
-            -Access 'Deny' |
-        Set-AzNetworkSecurityGroup
+# You can also enable this rule using PowerShell by running:
+$NSG = Get-AzNetworkSecurityGroup -Name 'nsg-sn-default-vnet-spoke-alpha' -ResourceGroupName 'rg-demo-alpha'
+Add-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $NSG `
+    -Name 'Deny_RDP_Into_the_Subnet_from_Any' `
+    -Protocol '*' `
+    -SourcePortRange '*' `
+    -DestinationPortRange '3389' `
+    -SourceAddressPrefix '*' `
+    -DestinationAddressPrefix '*' `
+    -Direction 'Inbound' `
+    -Priority 100 `
+    -Access 'Deny' |
+Set-AzNetworkSecurityGroup
 
 # 9. After a couple of minutes, try logging into the same spoke virtual machine 'vm-spoke-alpha' using Bastion. Notice that the connection can no longer be established.
 
@@ -252,13 +213,13 @@ Get-AzEffectiveRouteTable -NetworkInterfaceName $Vm_AlphaSpoke_NetworkProfile_Id
 # 5. Select the 'Rule Collections' option from the settings from the left blade.
 # 6. Notice there is one Rule collection which is pointing to the 'spokes' network group.
 # 7. If you click on this rule collection, Notice we have one rule configured, which always allows RDP into the spokes from the Azure Bastion IP range.
-    # This rule will override the 'Deny' rule enforced by the NSG for that virtual network. You can learn more about the rule types in the AVNM documentation.
+# This rule will override the 'Deny' rule enforced by the NSG for that virtual network. You can learn more about the rule types in the AVNM documentation.
 # 8. If you navigate back to the Security Admin configuration menu, then
 # 9. Click on 'Deploy'
 # 10. In the Deploy menu, select the 'Target Regions' as your location for deployment (i.e. australiaeast) and then click 'Next'
 # 11. Notice the following:
-    # - Existing configurations are empty, which represents the current state of your environment efore deployment.
-    # - Goal state are showing 1 'Add' configurations, which represents the target state of your environment after deployment.
+# - Existing configurations are empty, which represents the current state of your environment efore deployment.
+# - Goal state are showing 1 'Add' configurations, which represents the target state of your environment after deployment.
 # 12. Now click on 'Deploy'. This will submit a deployment to AVNM to create your security admin rules goal state.
 
 # TO perform these steps using PowerShell, ensure you have the latest 'Az.Network' PowerShell module installed with at least version (5.1.2). Execute the following:
@@ -284,12 +245,12 @@ Get-AzNetworkManagerDeploymentStatus -NetworkManagerName $NetworkManagerName `
     -ResourceGroupName $NetworkManagerResourceGroupName `
     -Region $Location `
     -DeploymentType 'securityAdmin' | 
-    Select-Object -ExpandProperty Value | 
-    Select-Object -Property CommitTime, Region, DeploymentStatus, DeploymentType
+Select-Object -ExpandProperty Value | 
+Select-Object -Property CommitTime, Region, DeploymentStatus, DeploymentType
 
 # 14. To validate the security admin rules that impacting the hub virtual network, you can run the following:
-    Get-AzNetworkManagerEffectiveSecurityAdminRule -VirtualNetworkName 'vnet-spoke-alpha' -VirtualNetworkResourceGroupName 'rg-demo-alpha'
-    # This will return the Security Admin Rule Resource ID that is effecting the virtual network. You can apply this to both the hub and spoke virtual networks to see the result
+Get-AzNetworkManagerEffectiveSecurityAdminRule -VirtualNetworkName 'vnet-spoke-alpha' -VirtualNetworkResourceGroupName 'rg-demo-alpha'
+# This will return the Security Admin Rule Resource ID that is effecting the virtual network. You can apply this to both the hub and spoke virtual networks to see the result
 
 #endregion
 
@@ -302,7 +263,7 @@ Get-AzNetworkManagerDeploymentStatus -NetworkManagerName $NetworkManagerName `
 # 5. You should have a new Tab opened with an RDP session into the 'vm-spoke-alpha' using Azure Bastion.
 
 # ==> Notice that now there is connectivity established to the spoke virtual machine via Azure Bastion, although the NSG rule is denying it.. 
-    # That is because AVNM Always Allow rules supersede NSG rules, and the matching rule does not get delivered to the NSG.
+# That is because AVNM Always Allow rules supersede NSG rules, and the matching rule does not get delivered to the NSG.
 
 #endregion
 
@@ -310,8 +271,8 @@ Get-AzNetworkManagerDeploymentStatus -NetworkManagerName $NetworkManagerName `
 
 # 1. To delete the lab environment. Run the following in PowerShell:
 
-    . .\scripts\Remove-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -ErrorAction Stop
+. .\scripts\Remove-AvnmDemo.ps1 -SubscriptionId $SubscriptionId -ErrorAction Stop
 
-    # This will delete the AVNM Azure Policies, and related resource groups used in this lab.
+# This will delete the AVNM Azure Policies, and related resource groups used in this lab.
 
 #endregion
