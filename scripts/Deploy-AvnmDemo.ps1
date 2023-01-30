@@ -50,6 +50,11 @@ try {
     if (!(Get-Command Get-AzNetworkManager -Module Az.Network)) {
         Write-Error "Module 'Az.Network' Not found.. Update module by running 'Update-Module 'Az.Network' -Force'"
     }
+
+    ## Validate PowerShell version
+    if ($PSVersionTable.PSVersion.Major -ne 7) {
+        Write-Error "PowerShell Core is not running. Please run this demo using PowerShell core. You can install PowerShell 7 from [https://github.com/PowerShell/powershell/releases]"
+    }
 }
 catch {
     throw $PSItem.Exception.Message
@@ -72,7 +77,7 @@ catch {
 
 ## Deploy Demo Template (Takes about 15-20 minutes to complete)
 try {
-    Write-Host "Deploying AVNM using template file [$TemplateFile] at location [$Location].. ETA: 10-15 minutes" -ForegroundColor Yellow
+    Write-Host "Deploying AVNM Demo environment using template file [$TemplateFile] at location [$Location].. ETA: 10-15 minutes" -ForegroundColor Yellow
     New-AzDeployment -Name $DeploymentName -Location $Location -TemplateFile $TemplateFile -WarningAction SilentlyContinue
 }
 catch {

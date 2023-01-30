@@ -52,8 +52,9 @@ In order to implement the lab, the following is required:
   - [Owner](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner)
   - [Contributor](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor) and [Resource Policy Contributor](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#resource-policy-contributor).
 
-- Visual Studio Code installed with the [Bicep Extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-bicep)
-- Azure CLI with the latest version of the [Bicep CLI](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#azure-cli) or [Manual installation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#install-manually) of Bicep.
+- [PowerShell Core 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.3)
+- [Visual Studio Code](https://code.visualstudio.com/download) installed with the [Bicep Extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-bicep)
+- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) with the latest version of the [Bicep CLI](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#azure-cli) or [Manual installation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#install-manually) of Bicep.
 - Latest [Azure PowerShell](https://learn.microsoft.com/en-us/powershell/azure/what-is-azure-powershell?view=azps-9.3.0) modules:
   - Az.Accounts
   - Az.Resources

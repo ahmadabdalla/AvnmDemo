@@ -12,7 +12,7 @@ Mandatory. The subscription ID to deploy the demo into.
 Mandatory. The location to deploy the demo into.
 
 .EXAMPLE
-Deploy-AvnmDemo -TemplateFilePath 'main.deploy.bicep'
+Remove-AvnmDemo -SubscriptionId '12345678-1234-1234-1234567890123'
 
 #>
 
@@ -23,13 +23,10 @@ param (
 )
 
 ## Check Required Azure PowerShell Modules
-
 try {
     $modules = @(
         'Az.Accounts'
         'Az.Resources'
-        'Az.Network'
-        'Az.Compute'
     )
     Write-Host "Validating required PowerShell Modules: `n$($modules | Out-String)" -ForegroundColor Yellow
     $modules | Foreach-Object {
@@ -37,21 +34,12 @@ try {
             Write-Error "Module $PSItem Not found.. Install by running 'Install-Module $PSItem -Force -AllowClobber'"
         }
     }
-    
-    ## Check if Azure Network Manager Cmdlets are available in the 'Az.Network' Module
-    Write-Host "Checking AzNetworkManager Cmdlets in the 'Az.Network' PowerShell module" -ForegroundColor Yellow
-    if (!(Get-Command Get-AzNetworkManager -Module Az.Network)) {
-        Write-Error "Module 'Az.Network' Not found.. Update module by running 'Update-Module 'Az.Network' -Force'"
-    }
 }
 catch {
     throw $PSItem.Exception.Message
 }
 
-$DeploymentName = "deployment-demo-avnm"
-
 ## Connect To Azure
-
 try {
     Write-Host "Validating Azure context for Subscription ID: [$SubscriptionId]" -ForegroundColor Yellow
     if ((Get-AzContext).Subscription.Id -ne $SubscriptionId) {
@@ -63,26 +51,53 @@ catch {
     throw $PSItem.Exception.Message
 }
 
-## Remove Demo Template (Takes about 15-20 minutes to complete)
+## Remove AVNM Resource Group and Resources
+Write-Host "Removing Resource Group [rg-demo-avnm] and Policy Resources. ETA: 5 minutes" -ForegroundColor Yellow
 
-Write-Host "Removing Resource Group [rg-demo-avnm]" -ForegroundColor Yellow
-Remove-AzResourceGroup -Name "rg-demo-avnm" -Force -ErrorAction Stop
+if ($null -ne (Get-AzResourceGroup -Name "rg-demo-avnm" -WarningAction SilentlyContinue)) {
+    
+    Remove-AzResourceGroup -Name "rg-demo-avnm" -Force -ErrorAction Stop -WarningAction SilentlyContinue
 
-Write-Host "Removing Resource Group [rg-demo-alpha]" -ForegroundColor Yellow
-Remove-AzResourceGroup -Name "rg-demo-alpha" -Force -ErrorAction Stop
+    ## Remove AVNM Policy Assignments
+    Write-Host "Removing AVNM Policy Assignments at scope: Subscription[$SubscriptionId]. ETA: 1 minute" -ForegroundColor Yellow
+    $PolicyAssignmentNames = @(
+        '[AVNM] pa-avnm-ng-alpha'
+        '[AVNM] pa-avnm-ng-beta'
+        '[AVNM] pa-avnm-ng-spokes'
+    )
 
-Write-Host "Removing Resource Group [rg-demo-beta]" -ForegroundColor Yellow
-Remove-AzResourceGroup -Name "rg-demo-beta" -Force -ErrorAction Stop
+    $PolicyAssignmentNames | Foreach-Object -ThrottleLimit 5 -Parallel {
+        if ($null -ne (Get-AzPolicyAssignment -Name $PSItem -Scope "/subscriptions/$USING:SubscriptionId" -WarningAction SilentlyContinue)) {
+            Remove-AzPolicyAssignment -Name $PSItem -Scope "/subscriptions/$USING:SubscriptionId" -ErrorAction Stop -WarningAction SilentlyContinue
+        }
+    }
 
-Write-Host "Removing Resource Group [rg-demo-hub]" -ForegroundColor Yellow
-Remove-AzResourceGroup -Name "rg-demo-hub" -Force -ErrorAction Stop
+    ## Remove AVNM Policy Definitions
+    Write-Host "Removing AVNM Policy Definitions at scope: Subscription[$SubscriptionId]. ETA: 1 minute" -ForegroundColor Yellow
+    $PolicyDefinitionsNames = @(
+        '[AVNM] pd-avnm-ng-alpha'
+        '[AVNM] pd-avnm-ng-beta'
+        '[AVNM] pd-avnm-ng-spokes'
+    )
 
-Write-Host "Removing AVNM Policy Assignments at scope: Subscription[$SubscriptionId]" -ForegroundColor Yellow
-Remove-AzPolicyAssignment -Name "[AVNM] pa-avnm-ng-alpha" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop
-Remove-AzPolicyAssignment -Name "[AVNM] pa-avnm-ng-beta" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop
-Remove-AzPolicyAssignment -Name "[AVNM] pa-avnm-ng-spokes" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop
+    $PolicyDefinitionsNames | Foreach-Object -ThrottleLimit 5 -Parallel {
+        if ($null -ne (Get-AzPolicyDefinition -Name $PSItem -SubscriptionId $USING:SubscriptionId -WarningAction SilentlyContinue)) {
+            Remove-AzPolicyDefinition -Name $PSItem -SubscriptionId $USING:SubscriptionId -Force -ErrorAction Stop -WarningAction SilentlyContinue
+        }
+    }
 
-Write-Host "Removing AVNM Policy Definitions at scope: Subscription[$SubscriptionId]" -ForegroundColor Yellow
-Remove-AzPolicyDefinition -Name "[AVNM] pd-avnm-ng-alpha" -SubscriptionId $SubscriptionId -Force -ErrorAction Stop
-Remove-AzPolicyDefinition -Name "[AVNM] pd-avnm-ng-beta" -SubscriptionId $SubscriptionId -Force -ErrorAction Stop
-Remove-AzPolicyDefinition -Name "[AVNM] pd-avnm-ng-spokes" -SubscriptionId $SubscriptionId -Force -ErrorAction Stop
+}
+
+# Remove Remaining Resource Groups
+$ResourceGroupNames = @(
+    'rg-demo-alpha'
+    'rg-demo-beta'
+    'rg-demo-hub'
+)
+
+$ResourceGroupNames | Foreach-Object -ThrottleLimit 5 -Parallel {
+    Write-Host "Removing Resource Group [$PSItem]. ETA: 5-10 minutes" -ForegroundColor Yellow
+    if ($null -ne (Get-AzResourceGroup -Name $PSItem)) {
+        Remove-AzResourceGroup -Name $PSItem -Force -ErrorAction Stop -WarningAction SilentlyContinue
+    }
+}
