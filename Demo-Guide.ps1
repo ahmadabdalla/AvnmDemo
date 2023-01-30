@@ -4,6 +4,7 @@
 ## This script contains different sections meant to be run in sequence in order to achieve the lab outcome. 
 ## Start by providing the subscription ID for your environment, and the location where you want to deploy the resources.
 ## Ensure that you have the right permissions to deploy into the subscription and that AVNM is available in the region you are deploying in. The default is 'Australia East'
+## It is important that you are running on PowerShell Core 7 for this demo.
 
 #region ####### PART 1 - Creating the AVNM Demo Environment (15 minutes) ######
 

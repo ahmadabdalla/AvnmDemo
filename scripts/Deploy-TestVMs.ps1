@@ -40,66 +40,48 @@ catch {
     throw $PSItem.Exception.Message
 }
 
-try {
-    Write-Host "Deploying Demo VM [vm-hub].. ETA: 5 minutes" -ForegroundColor Yellow
-    ## Hub VM
-    New-AzVm `
-        -ResourceGroupName 'rg-demo-hub' `
-        -Name 'vm-hub' `
-        -Location $Location `
-        -VirtualNetworkName 'vnet-hub-demo' `
-        -SubnetName 'sn-default-vnet-hub-demo' `
-        -Credential $Credential `
-        -Size 'Standard_B2s' `
-        -PublicIpAddressName '' `
-        -WarningAction SilentlyContinue
-    
-    $HubVmNic = Get-AzNetworkInterface -Name 'vm-hub' -ResourceGroupName 'rg-demo-hub'
-    $HubVmNic.NetworkSecurityGroup = $null
-    Set-AzNetworkInterface -NetworkInterface $HubVmNic | Out-Null
-    Get-AzNetworkSecurityGroup -Name 'vm-hub' -ResourceGroupName 'rg-demo-hub' -ErrorAction SilentlyContinue | Remove-AzNetworkSecurityGroup -Force -ErrorAction SilentlyContinue
+$VmProfiles = @(
+    @{
+        ## Hub VM
+        ResourceGroupName  = 'rg-demo-hub'
+        Name               = 'vm-hub'
+        VirtualNetworkName = 'vnet-hub-demo'
+        SubnetName         = 'sn-default-vnet-hub-demo'
+    }
+    @{
+        ## ALPHA Spoke VM
+        ResourceGroupName  = 'rg-demo-alpha'
+        Name               = 'vm-alpha-spoke'
+        VirtualNetworkName = 'vnet-spoke-alpha'
+        SubnetName         = 'sn-default-vnet-spoke-alpha'
+    }
+    @{
+        ## ALPHA X VM
+        ResourceGroupName  = 'rg-demo-alpha'
+        Name               = 'vm-alpha-x'
+        VirtualNetworkName = 'vnet-x-alpha'
+        SubnetName         = 'sn-default-vnet-x-alpha'
+    }
+)
 
-    Write-Host "Deploying Demo VM [vm-alpha-spoke].. ETA: 5 minutes" -ForegroundColor Yellow
-    ## ALPHA Spoke VM
+Write-Host "Deploying Demo VMs. ETA: 5 minutes" -ForegroundColor Yellow
+$VmProfiles | Foreach-Object -ThrottleLimit 5 -Parallel {
     New-AzVm `
-        -ResourceGroupName 'rg-demo-alpha' `
-        -Name 'vm-alpha-spoke' `
-        -Location $Location `
-        -VirtualNetworkName 'vnet-spoke-alpha' `
-        -SubnetName 'sn-default-vnet-spoke-alpha' `
-        -Credential $Credential `
-        -Size 'Standard_B2s' `
-        -PublicIpAddressName '' `
-        -WarningAction SilentlyContinue
-
-    $SpokeVmNic = Get-AzNetworkInterface -Name 'vm-alpha-spoke' -ResourceGroupName 'rg-demo-alpha'
-    $SpokeVmNic.NetworkSecurityGroup = $null
-    Set-AzNetworkInterface -NetworkInterface $SpokeVmNic | Out-Null
-    Get-AzNetworkSecurityGroup -Name 'vm-alpha-spoke' -ResourceGroupName 'rg-demo-alpha' -ErrorAction SilentlyContinue | Remove-AzNetworkSecurityGroup -Force -ErrorAction SilentlyContinue
-    
-    Write-Host "Deploying Demo VM [vm-alpha-x].. ETA: 5 minutes" -ForegroundColor Yellow
-    ## ALPHA X VM
-    New-AzVm `
-        -ResourceGroupName 'rg-demo-alpha' `
-        -Name 'vm-alpha-x' `
-        -Location $Location `
-        -VirtualNetworkName 'vnet-x-alpha' `
-        -SubnetName 'sn-default-vnet-x-alpha' `
-        -Credential $Credential `
+        -ResourceGroupName $PSItem.ResourceGroupName `
+        -Name $PSItem.Name `
+        -Location $USING:Location `
+        -VirtualNetworkName $PSItem.VirtualNetworkName `
+        -SubnetName $PSItem.SubnetName `
+        -Credential $USING:Credential `
         -Size 'Standard_B2s' `
         -PublicIpAddressName '' `
         -WarningAction SilentlyContinue
 
-        $ExtVmNic = Get-AzNetworkInterface -Name 'vm-alpha-x' -ResourceGroupName 'rg-demo-alpha'
-        $ExtVmNic.NetworkSecurityGroup = $null
-        Set-AzNetworkInterface -NetworkInterface $ExtVmNic | Out-Null
-        Get-AzNetworkSecurityGroup -Name 'vm-alpha-x' -ResourceGroupName 'rg-demo-alpha' -ErrorAction SilentlyContinue | Remove-AzNetworkSecurityGroup -Force -ErrorAction SilentlyContinue
-}
-catch {
-    throw $PSItem.Exception.Message
-}
-finally {
-    Get-AzVm -Status | Where-Object -Property ResourceGroupName -like "rg-demo-*" | Select-Object -Property Name, ResourceGroupName, ProvisioningState, PowerState | Format-Table
+    $Nic = Get-AzNetworkInterface -Name $PSItem.Name -ResourceGroupName $PSItem.ResourceGroupName -WarningAction SilentlyContinue
+    $Nic.NetworkSecurityGroup = $null
+    Set-AzNetworkInterface -NetworkInterface $Nic -WarningAction SilentlyContinue | Out-Null
+    Get-AzNetworkSecurityGroup -Name $PSItem.Name -ResourceGroupName $PSItem.ResourceGroupName -ErrorAction SilentlyContinue -WarningAction SilentlyContinue | Remove-AzNetworkSecurityGroup -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 }
 
+Get-AzVm -Status | Where-Object -Property ResourceGroupName -like "rg-demo-*" | Select-Object -Property Name, ResourceGroupName, ProvisioningState, PowerState | Format-Table
 
