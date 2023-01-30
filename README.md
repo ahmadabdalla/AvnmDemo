@@ -4,13 +4,13 @@ This repository contains a demo implementation for [Azure Virtual Network Manage
 
 ![avnm_demo](images/avnm_demo.png)
 
-# Requirements
+# Recommendations
 
-This demo requires the following:
+If you are new to Azure or Network Manager, this demo recommends having or reviewing the following topics:
 
 ## Azure Specific Knowledge
 
-1. Assumes basic understanding of Microsoft Azure and [Azure Networking](https://learn.microsoft.com/en-us/azure/networking/azure-for-network-engineers?toc=%2Fazure%2Fnetworking%2Ffundamentals%2Ftoc.json), specifically related to the following:
+1. Basic understanding of Microsoft Azure and [Azure Networking](https://learn.microsoft.com/en-us/azure/networking/azure-for-network-engineers?toc=%2Fazure%2Fnetworking%2Ffundamentals%2Ftoc.json), specifically related to the following:
    1. [Subscriptions](https://learn.microsoft.com/en-us/microsoft-365/enterprise/subscriptions-licenses-accounts-and-tenants-for-microsoft-cloud-offerings?view=o365-worldwide#subscriptions)
    2. [Resource Groups](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#what-is-a-resource-group)
    3. [Azure Policy](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
@@ -70,7 +70,7 @@ The repo is structured in the following way:
 - **Modules**: Contains the [Common Azure Resources Modules Library (CARML)](https://aka.ms/carml) modules used by the constructs (configuration files) to deploy the demo.
 - **Scripts**: Contains scripts that supports the demo.
 - [**Demo-Guide.ps1**](https://github.com/ahmadabdalla/AvnmDemo/blob/main/Demo-Guide.ps1): Is a script that goes through the demo step by step.
-- [**main.deploy.bicep**](https://github.com/ahmadabdalla/AvnmDemo/blob/main/main.deploy.bicep): Is the main Bicep file used to demo the demo.
+- [**main.deploy.bicep**](https://github.com/ahmadabdalla/AvnmDemo/blob/main/main.deploy.bicep): Is the main Bicep file used to deploy the demo environment.
 
 # How to start the demo?
 
